@@ -19,6 +19,9 @@ builder.Services.AddOutputCache();
 // AMQP chat client using RabbitMQ.Client v7 via Aspire connection
 builder.Services.AddSingleton<MessagingAspire.Web.Services.AmqpChatClientV7>();
 
+// STOMP chat client using ClientWebSocket
+builder.Services.AddSingleton<MessagingAspire.Web.Services.StompChatClient>();
+
 builder.Services.AddHttpClient<WeatherApiClient>(client =>
     {
         // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
