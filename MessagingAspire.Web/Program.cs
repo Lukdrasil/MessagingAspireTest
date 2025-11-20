@@ -16,8 +16,6 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-// STOMP TCP client service (pure .NET implementation)
-builder.Services.AddSingleton<MessagingAspire.Web.Services.StompTcpClient>();
 // AMQP chat client using RabbitMQ.Client v7 via Aspire connection
 builder.Services.AddSingleton<MessagingAspire.Web.Services.AmqpChatClientV7>();
 
