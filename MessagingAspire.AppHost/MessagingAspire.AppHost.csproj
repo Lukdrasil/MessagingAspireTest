@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.0.0" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>09af6f40-07fe-48b1-9cfb-8fc40e5e8ce6</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MessagingAspire.ApiService\MessagingAspire.ApiService.csproj" />
+    <ProjectReference Include="..\MessagingAspire.Web\MessagingAspire.Web.csproj" />
+    <ProjectReference Include="..\MessagingAspire.Consumer\MessagingAspire.Consumer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,133 @@
+@page "/amqp-chat-cs"
+@rendermode InteractiveServer
+@using MessagingAspire.Web.Services
+@inject AmqpChatClientV7 ChatClient
+
+<PageTitle>AMQP Chat (C#)</PageTitle>
+
+<h1 class="mb-3">AMQP Chat (C#)</h1>
+
+<div class="row g-3">
+    <div class="col-12 col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">Connection</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label">Display Name</label>
+                    <input class="form-control" @bind="_displayName" />
+                </div>
+                <button class="btn btn-success me-2" @onclick="Connect" disabled="@ChatClient.IsConnected">Connect</button>
+                <button class="btn btn-secondary" @onclick="Disconnect" disabled="@(!ChatClient.IsConnected)">Disconnect</button>
+                <div class="form-text mt-2">Status: @(ChatClient.IsConnected ? "Connected" : "Disconnected")</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Send Message</div>
+            <div class="card-body">
+                <textarea class="form-control mb-2" rows="3" @bind="_outgoing" @onkeydown="HandleSendKey"></textarea>
+                <button class="btn btn-primary" @onclick="Send" disabled="@(!ChatClient.IsConnected || string.IsNullOrWhiteSpace(_outgoing))">Send</button>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header">System Events</div>
+            <div class="card-body small" style="max-height:160px;overflow:auto;">
+                @foreach (var evt in _systemEvents)
+                {
+                    <div>@evt</div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-8">
+        <div class="card h-100">
+            <div class="card-header">Messages (@_messages.Count)</div>
+            <div class="card-body" style="max-height:480px;overflow:auto;">
+                @if (_messages.Count == 0)
+                {
+                    <div class="text-muted">No messages yet.</div>
+                }
+                else
+                {
+                    @foreach (var m in _messages.OrderByDescending(x => x.Timestamp))
+                    {
+                        <div class="mb-2">
+                            <strong>@m.User</strong>
+                            <span class="text-muted">(@m.Timestamp.ToLocalTime().ToString("HH:mm:ss"))</span>
+                            <div>@m.Text</div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _displayName = "user";
+    private string _outgoing = string.Empty;
+    private readonly List<ChatMessage> _messages = new();
+    private readonly List<string> _systemEvents = new();
+
+    protected override void OnInitialized()
+    {
+        ChatClient.MessageReceived += OnMessage;
+        ChatClient.SystemEvent += OnSystem;
+    }
+
+    private async Task Connect()
+    {
+        if (string.IsNullOrWhiteSpace(_displayName)) _displayName = "user";
+        await ChatClient.ConnectAsync(_displayName);
+    }
+
+    private async Task Disconnect()
+    {
+        await ChatClient.DisconnectAsync();
+    }
+
+    private async Task Send()
+    {
+        var text = _outgoing.Trim();
+        if (text.Length == 0) return;
+        _outgoing = string.Empty;
+        await ChatClient.SendChatMessageAsync(_displayName, text);
+    }
+
+    private void HandleSendKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            _ = Send();
+        }
+    }
+
+    private void OnMessage(ChatMessage msg)
+    {
+        _messages.Add(msg);
+        if (_messages.Count > 500)
+        {
+            _messages.RemoveRange(0, _messages.Count - 500);
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSystem(string info)
+    {
+        _systemEvents.Insert(0, info);
+        if (_systemEvents.Count > 200)
+        {
+            _systemEvents.RemoveRange(200, _systemEvents.Count - 200);
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        ChatClient.MessageReceived -= OnMessage;
+        ChatClient.SystemEvent -= OnSystem;
+        if (ChatClient.IsConnected)
+        {
+            await ChatClient.DisconnectAsync();
+        }
+    }
+}

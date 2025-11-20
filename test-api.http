@@ -1,0 +1,36 @@
+### Send chat message to RabbitMQ
+POST {{MessagingAspire.ApiService}}/messages
+Content-Type: application/json
+
+{
+  "user": "TestUser",
+  "text": "Hello from HTTP client!"
+}
+
+###
+
+### Send another message
+POST {{MessagingAspire.ApiService}}/messages
+Content-Type: application/json
+
+{
+  "user": "Jan",
+  "text": "Ahoj, jak se máš?"
+}
+
+###
+
+### Send message without user (will be Anonymous)
+POST {{MessagingAspire.ApiService}}/messages
+Content-Type: application/json
+
+{
+  "text": "This is an anonymous message"
+}
+
+###
+
+### Get weather forecast (original endpoint)
+GET {{MessagingAspire.ApiService}}/weatherforecast
+
+###

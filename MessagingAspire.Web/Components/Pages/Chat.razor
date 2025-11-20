@@ -1,0 +1,122 @@
+@page "/chat"
+@rendermode InteractiveServer
+@using System.Text.Json
+
+<PageTitle>Chat - STOMP</PageTitle>
+
+<h1>RabbitMQ STOMP Chat</h1>
+
+<div class="chat-container">
+    <div class="connection-status">
+        <span class="badge @(IsConnected ? "bg-success" : "bg-danger")">
+            @(IsConnected ? "Connected" : "Disconnected")
+        </span>
+    </div>
+
+    <div class="chat-messages" style="border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: auto; margin-bottom: 20px;">
+        @foreach (var msg in messages)
+        {
+            <div class="message-item" style="margin-bottom: 10px; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                <strong>@msg.User</strong>
+                <span style="color: #666; font-size: 0.9em;">(@msg.Timestamp.ToLocalTime().ToString("HH:mm:ss"))</span>
+                <br />
+                <span>@msg.Text</span>
+            </div>
+        }
+    </div>
+
+    <div class="chat-input">
+        <div class="mb-3">
+            <label for="username" class="form-label">Your Name:</label>
+            <input type="text" class="form-control" id="username" @bind="userName" placeholder="Enter your name" disabled="@IsConnected" />
+        </div>
+        <div class="mb-3">
+            <label for="message" class="form-label">Message:</label>
+            <div class="input-group">
+                <input type="text" class="form-control" id="message" @bind="messageText" 
+                       @onkeypress="HandleKeyPress" placeholder="Type a message..." disabled="@(!IsConnected)" />
+                <button class="btn btn-primary" @onclick="SendMessage" disabled="@(!IsConnected || string.IsNullOrWhiteSpace(messageText))">
+                    Send
+                </button>
+            </div>
+        </div>
+        <div>
+            @if (!IsConnected)
+            {
+                <button class="btn btn-success" @onclick="Connect">Connect to STOMP</button>
+            }
+            else
+            {
+                <button class="btn btn-danger" @onclick="Disconnect">Disconnect</button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ChatMessage> messages = new();
+    private string userName = "User";
+    private string messageText = "";
+    private bool IsConnected = false;
+
+    private class ChatMessage
+    {
+        public string Id { get; set; } = "";
+        public string User { get; set; } = "";
+        public string Text { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+    }
+
+    private void Connect()
+    {
+        IsConnected = true;
+        messages.Add(new ChatMessage 
+        { 
+            User = "System", 
+            Text = "Connected to STOMP server. You can now send and receive messages.",
+            Timestamp = DateTime.UtcNow
+        });
+        StateHasChanged();
+    }
+
+    private void Disconnect()
+    {
+        IsConnected = false;
+        messages.Add(new ChatMessage 
+        { 
+            User = "System", 
+            Text = "Disconnected from STOMP server.",
+            Timestamp = DateTime.UtcNow
+        });
+        StateHasChanged();
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(messageText) || !IsConnected)
+            return;
+
+        var message = new ChatMessage
+        {
+            Id = Guid.NewGuid().ToString(),
+            User = userName,
+            Text = messageText,
+            Timestamp = DateTime.UtcNow
+        };
+
+        messages.Add(message);
+        messageText = "";
+        StateHasChanged();
+
+        // Here we would send via STOMP - for now just local echo
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+}

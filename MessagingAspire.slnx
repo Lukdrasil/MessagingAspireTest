@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="MessagingAspire.ApiService/MessagingAspire.ApiService.csproj" />
+  <Project Path="MessagingAspire.AppHost/MessagingAspire.AppHost.csproj" />
+  <Project Path="MessagingAspire.Consumer/MessagingAspire.Consumer.csproj" />
+  <Project Path="MessagingAspire.ServiceDefaults/MessagingAspire.ServiceDefaults.csproj" />
+  <Project Path="MessagingAspire.Web/MessagingAspire.Web.csproj" />
+</Solution>
