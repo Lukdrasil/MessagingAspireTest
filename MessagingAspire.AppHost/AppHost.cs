@@ -18,9 +18,9 @@ var rabbitmq = builder.AddRabbitMQ("rabbitmq")
     .WithEndpoint(name: "stomp-ws", port: 15674, targetPort: 15674, scheme: "ws")
     .WithEndpoint(name: "stomp-tcp", port: 61613, targetPort: 61613, scheme: "tcp");
 
-//var apiService = builder.AddProject<Projects.MessagingAspire_ApiService>("apiservice")
-//    .WithHttpHealthCheck("/health")
-//    .WithReference(rabbitmq);
+var apiService = builder.AddProject<Projects.MessagingAspire_ApiService>("apiservice")
+    .WithHttpHealthCheck("/health")
+    .WithReference(rabbitmq);
 
 // Add Consumer worker service
 builder.AddProject<Projects.MessagingAspire_Consumer>("consumer")
@@ -29,8 +29,8 @@ builder.AddProject<Projects.MessagingAspire_Consumer>("consumer")
 builder.AddProject<Projects.MessagingAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
-    //.WithReference(apiService)
-    .WithReference(rabbitmq);
-    //.WaitFor(apiService);
+    .WithReference(apiService)
+    .WithReference(rabbitmq)
+    .WaitFor(apiService);
 
 builder.Build().Run();

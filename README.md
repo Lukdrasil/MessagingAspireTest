@@ -72,6 +72,35 @@ const ws = new WebSocket('ws://localhost:15674/ws');
 ws.send('CONNECT\naccept-version:1.2\n\n\x00');
 ```
 
+## C# STOMP Client (nově)
+
+Kromě JavaScript STOMP klienta (`wwwroot/stomp-client.js`) je v projektu nyní dostupná i čistě C# implementace STOMP klienta, která replikuje chování JS klienta a je navržena pro použití na server-side Blazor/Interactive komponentách.
+
+- Implementace: `MessagingAspire.Web.Services.StompChatClient` (soubor `Services/StompTcpClient.cs` obsahuje novou třídu `StompChatClient`).
+- Razor stránka: `/stomp-chat-cs` implementovaná v `Components/Pages/StompChatCSharp.razor` — stránka má stejné UI jako STOMP/AMQP chat a umožňuje připojení přímo z C# pomocí `ClientWebSocket`.
+- Registrace služby: `Program.cs` nyní registruje `StompChatClient` jako singleton, takže jej lze injectovat do stranek a komponent.
+
+Klíčové vlastnosti C# klienta:
+- Používá `ClientWebSocket` pro připojení na Web STOMP (`ws://...:15674/ws`).
+- Posílá STOMP rámce: `CONNECT`, `SUBSCRIBE`, `SEND`, `DISCONNECT`.
+- Asynchronní čtecí smyčka zpracovává STOMP rámce a vyvolává události `MessageReceived` a `SystemEvent`.
+- Parsování `MESSAGE` frame upraveno tak, aby bezpečně odstraňovalo STOMP null-terminátor (`\0`) před deserializací JSON — to řeší chybu "'0x00' is invalid after a single JSON value".
+
+Tipy pro testování C# STOMP klienta:
+1. Spusťte AppHost (`MessagingAspire.AppHost`) jak obvykle.
+2. Otevřete web frontend a přejděte na `/stomp-chat-cs`.
+3. Zadejte display name, ověřte URL (výchozí `ws://localhost:15674/ws`) a klikněte Connect.
+4. Pošlete zprávu; měla by se zobrazit ve všech připojených klientech (JS i C#).
+
+## Krátký changelog (soubory změněny/nové)
+
+- `MessagingAspire.Web/Services/StompTcpClient.cs` — původní placeholder soubor byl rozšířen a nyní obsahuje `StompChatClient` s kompletním STOMP-over-WebSocket chováním.
+- `MessagingAspire.Web/Components/Pages/StompChatCSharp.razor` — nová Razor stránka pro STOMP Chat napsaná v C#.
+- `MessagingAspire.Web/Program.cs` — přidána registrace `StompChatClient` jako singleton.
+- `MessagingAspire.Web/Components/Layout/NavMenu.razor` — přidán odkaz na novou stránku `STOMP Chat (C#)`.
+
+Pokud chcete revertovat zpět na dřívější stav s pouze JS klientem, stačí odstranit registraci služby a položku v navigaci; JS klient `wwwroot/stomp-client.js` zůstává beze změn.
+
 **Subscribe na frontu:**
 ```javascript
 ws.send('SUBSCRIBE\nid:sub-0\ndestination:/exchange/chat.exchange/chat.#\n\n\x00');
