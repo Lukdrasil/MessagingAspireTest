@@ -1,16 +1,18 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add RabbitMQ with STOMP plugin enabled
-var rabbitmq = builder.AddRabbitMQ("rabbitmq")
+var username = builder.AddParameter("username", secret: true);
+var password = builder.AddParameter("password", secret: true);
+
+var rabbitmq = builder.AddRabbitMQ("rabbitmq", username, password)
     .WithManagementPlugin()
-    .WithDataVolume()
     .WithEnvironment("RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS", "-rabbitmq_management path_prefix \"/rabbitmq\"")
     // Use enabled_plugins file to activate STOMP + Web STOMP
     .WithBindMount("./rabbitmq/enabled_plugins", "/etc/rabbitmq/enabled_plugins")
     .WithEnvironment("RABBITMQ_ENABLED_PLUGINS_FILE", "/etc/rabbitmq/enabled_plugins")
     // Define a non-guest default user to allow remote container access
-    .WithEnvironment("RABBITMQ_DEFAULT_USER", "chatuser")
-    .WithEnvironment("RABBITMQ_DEFAULT_PASS", "chatpass")
+    //.WithEnvironment("RABBITMQ_DEFAULT_USER", "chatuser")
+    //.WithEnvironment("RABBITMQ_DEFAULT_PASS", "chatpass")
     // (Optional) explicitly define STOMP/Web STOMP ports via env (defaults are usually fine)
     .WithEnvironment("RABBITMQ_STOMP_TCP_PORT", "61613")
     .WithEnvironment("RABBITMQ_WEB_STOMP_TCP_PORT", "15674")
